@@ -58,15 +58,24 @@ def track_flight():
 
 
 
-def calculate_time_left(departure_time):
+from datetime import datetime
+from dateutil import parser
+
+def calculate_time_left(departure_time_str):
     try:
-        now = datetime.datetime.utcnow()
-        dt = parser.isoparse(departure_time)
-        delta = dt - now
+        now = datetime.utcnow()
+        departure_time = parser.isoparse(departure_time_str)
+
+        # Ensure both are timezone-aware or naive (convert if needed)
+        if departure_time.tzinfo:
+            now = now.replace(tzinfo=departure_time.tzinfo)
+
+        delta = departure_time - now
         return str(delta)
     except Exception as e:
-        print("❌ Error parsing time:", e)
+        print("⚠️ Error in time calculation:", e)
         return "unknown"
+
 
 @app.route('/upload_pass', methods=['POST'])
 def upload_pass():
