@@ -3,15 +3,17 @@ import requests
 import datetime
 from cryptography.fernet import Fernet
 from dateutil import parser
+import os
 
-app = Flask(__name__)  # ✅ Define your Flask app
+API_KEY = os.getenv("API_KEY")
 
-@app.route("/")         # ✅ Add a homepage route
+app = Flask(__name__)  # ✅ Missing this before defining any routes
+
+@app.route("/")         # ✅ This fixes the "Not Found" error on root
 def home():
     return "Welcome to SkyMate – Flight Tracker API"
 
-
-# Demo encryption key
+# Secure key for demo (store safely in production)
 key = Fernet.generate_key()
 cipher = Fernet(key)
 
