@@ -5,27 +5,38 @@ from cryptography.fernet import Fernet
 from dateutil import parser
 import os
 
-API_KEY = 0d23219465fa374940821a8400682d1a
+API_KEY ="0d23219465fa374940821a8400682d1a"
+print("🔑 Loaded API_KEY:", API_KEY)  # Debugging line
 
-app = Flask(__name__)  # ✅ Missing this before defining any routes
+if not API_KEY:
+    raise RuntimeError("❌ API_KEY is missing! Make sure it's set in Render.")
 
-@app.route("/")         # ✅ This fixes the "Not Found" error on root
-def home():
-    return "Welcome to SkyMate – Flight Tracker API"
+
 
 # Secure key for demo (store safely in production)
 key = Fernet.generate_key()
 cipher = Fernet(key)
+from flask import Flask, request, jsonify
+app = Flask(__name__)
 
 @app.route('/track_flight', methods=['GET'])
 def track_flight():
     flight_number = request.args.get('flight')
+
+    if not flight_number:
+        return jsonify({"error": "Missing 'flight' query parameter"}), 400
+
     url = f"http://api.aviationstack.com/v1/flights?access_key={API_KEY}&flight_iata={flight_number}"
+    print(f"✈️ Fetching flight: {flight_number} from {url}")
 
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print("❌ Error fetching flight data:", e)
+        return jsonify({"error": "Flight API request failed"}), 500
 
-    # Filter out any results without a valid estimated departure
     flights = data.get("data", [])
     valid_flights = [
         f for f in flights
@@ -35,7 +46,6 @@ def track_flight():
     if not valid_flights:
         return jsonify({"error": "Flight not found"}), 404
 
-    # Pick the most recent one
     flight_info = valid_flights[0]
     departure_time = flight_info['departure']['estimated']
     time_left = calculate_time_left(departure_time)
@@ -47,11 +57,16 @@ def track_flight():
     })
 
 
+
 def calculate_time_left(departure_time):
-    now = datetime.datetime.utcnow()
-    dt = parser.isoparse(departure_time)
-    delta = dt - now
-    return str(delta)
+    try:
+        now = datetime.datetime.utcnow()
+        dt = parser.isoparse(departure_time)
+        delta = dt - now
+        return str(delta)
+    except Exception as e:
+        print("❌ Error parsing time:", e)
+        return "unknown"
 
 @app.route('/upload_pass', methods=['POST'])
 def upload_pass():
@@ -67,3 +82,5 @@ def decrypt_pass():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
