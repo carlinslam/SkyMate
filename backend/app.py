@@ -4,8 +4,12 @@ import datetime
 from cryptography.fernet import Fernet
 from dateutil import parser
 
-app = Flask(__name__)
-API_KEY = 'your_api_key_here'  # Replace with your AviationStack key
+app = Flask(__name__)  # ✅ Define your Flask app
+
+@app.route("/")         # ✅ Add a homepage route
+def home():
+    return "Welcome to SkyMate – Flight Tracker API"
+
 
 # Demo encryption key
 key = Fernet.generate_key()
