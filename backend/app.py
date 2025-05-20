@@ -19,10 +19,18 @@ def track_flight():
     response = requests.get(url)
     data = response.json()
 
-    if 'data' not in data or not data['data']:
+    # Filter out any results without a valid estimated departure
+    flights = data.get("data", [])
+    valid_flights = [
+        f for f in flights
+        if f.get("departure", {}).get("estimated")
+    ]
+
+    if not valid_flights:
         return jsonify({"error": "Flight not found"}), 404
 
-    flight_info = data['data'][0]
+    # Pick the most recent one
+    flight_info = valid_flights[0]
     departure_time = flight_info['departure']['estimated']
     time_left = calculate_time_left(departure_time)
 
@@ -31,6 +39,7 @@ def track_flight():
         "departure": departure_time,
         "time_until_departure": time_left
     })
+
 
 def calculate_time_left(departure_time):
     now = datetime.datetime.utcnow()
