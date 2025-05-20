@@ -5,7 +5,7 @@ from cryptography.fernet import Fernet
 from dateutil import parser
 import os
 
-API_KEY = os.getenv("API_KEY")
+API_KEY = 0d23219465fa374940821a8400682d1a
 
 app = Flask(__name__)  # ✅ Missing this before defining any routes
 
